@@ -96,30 +96,10 @@ class AssetsBuddy
     private $devModetmpl = false;
 
     /**
-     * $baseDirectory is relative to your working directory. If in doubt, run getcwd() to get your current working
-     * directory.
-     * @var string '/assets/'
-     */
-    private $baseUrl = '/assets/';
-
-    /**
-     * $cacheDirectory is relative to your $baseDirectory set above
-     * @var string 'cache'
-     */
-    private $cacheDirectory = 'cache/';
-
-    /**
      * $mincache is relative to your $baseDirectory set above
      * @var string '.mincache'
      */
     private $mincache = '.mincache';
-
-    /**
-     * $assetDirectory is relative to your working directory. If in doubt, run getcwd() to get your current working
-     * directory.
-     * @var string 'assets/'
-     */
-    private $assetDirectory = 'assets/';
 
     /**
      * $skipStartup flag. When this is set to true, all directory checking and changed setting checks will be skipped.
@@ -132,6 +112,9 @@ class AssetsBuddy
 
     // Here be dragons! Do not edit the following lines
 
+    private $baseUrl;
+    private $cacheDirectory;
+    private $assetDirectory;
     private $files = array();
     private $cacheDirectoryjs;
     private $cacheDirectorycss;
@@ -143,6 +126,8 @@ class AssetsBuddy
     private $isDirtycss;
     private $isDirtytmpl;
     private $mergetmpl = false;
+
+    private static $configSet = false;
     private static $Instance;
 
     /**
@@ -150,7 +135,7 @@ class AssetsBuddy
      * @access public
      * @param string $files javascript / cascading stylesheets files to enqueue. The files are relative to your working
      * directory If in doubt, run getcwd() to get your current working directory. The parameters of this method are
-     * overloadable. If one of the files cannot be read by PHP, it will throw an Exception. Files enqueued will be
+     * overloadable. If one of the files cannot be read by PHP, it will throw an \Exception. Files enqueued will be
      * rendered according to the order it was enqueued. Allowed file extensions : .js, .css, .tmpl.
      * @example AssetsBuddy::enqueue('js/jquery.js', 'js/underscore.js', 'js/backbone.js', 'dashboard.tmpl', 'style.css');
      * @return void
@@ -164,7 +149,7 @@ class AssetsBuddy
 
         if($num > 0) {
             for($i = 0; $i < $num; $i++){
-                $file = app_path() . func_get_arg($i);
+                $file = getcwd() . DIRECTORY_SEPARATOR . func_get_arg($i);
                 if(file_exists($file)){
                     $fileType = $T->getFileType($file);
                     if(!isset($T->files[$fileType])) {
@@ -175,7 +160,7 @@ class AssetsBuddy
                         $T->files[$fileType][] = $file;
                     }
                 } else {
-                    throw new Exception("{$file} does not exists");
+                    throw new \Exception("{$file} does not exists");
                 }
             }
         }
@@ -199,7 +184,7 @@ class AssetsBuddy
 
         if($num > 0) {
             for($i = 0; $i < $num; $i++){
-                $file = app_path() . func_get_arg($i);
+                $file = getcwd() . DIRECTORY_SEPARATOR . func_get_arg($i);
                 $fileType = $T->getFileType($file);
                 if(in_array($fileType, $this->supportedTypes)) {
                     $tempFiles = array();
@@ -309,6 +294,31 @@ class AssetsBuddy
         self::$Instance = null;
     }
 
+    public static function configure($config = array())
+    {
+        $T = self::getInstance(true);
+        if(!isset($config['baseUrl']) || !isset($config['assetDirectory']) || !isset($config['cacheDirectory'])) {
+            throw new \Exception('Usage : $config = array("baseUrl" => "/", "assetDirectory" => "assets", "cacheDirectory" => "cache"); AssetsBuddy::configure($config);');
+        } else {
+            self::$configSet = true;
+
+            $T->baseUrl = $config['baseUrl'];
+            $T->assetDirectory = $config['assetDirectory'];
+            $T->cacheDirectory = $config['cacheDirectory'];
+            $T->cacheDirectory = getcwd() . DIRECTORY_SEPARATOR . $T->cacheDirectory . DIRECTORY_SEPARATOR;
+            $T->cacheDirectoryjs = $T->cacheDirectory . 'js' . DIRECTORY_SEPARATOR;
+            $T->cacheDirectorycss = $T->cacheDirectory .'css' . DIRECTORY_SEPARATOR;
+            $T->cacheDirectorytmpl = $T->cacheDirectory .'tmpl' . DIRECTORY_SEPARATOR;
+            $T->assetDirectory = getcwd() . DIRECTORY_SEPARATOR . $T->assetDirectory . DIRECTORY_SEPARATOR;
+            $T->assetDirectoryjs = $T->assetDirectory . 'js' . DIRECTORY_SEPARATOR . 'min' . DIRECTORY_SEPARATOR;
+            $T->assetDirectorycss = $T->assetDirectory . 'css' . DIRECTORY_SEPARATOR . 'min' . DIRECTORY_SEPARATOR;
+            $T->assetDirectorytmpl = $T->assetDirectory . 'tmpl' . DIRECTORY_SEPARATOR . 'min' . DIRECTORY_SEPARATOR;
+            $T->mincache = $T->cacheDirectory . $T->mincache;
+            $T->supportedTypes = array('js', 'css', 'tmpl');
+            $T->startUp();
+        }
+    }
+
     public static function clearCache()
     {
         $T = self::getInstance();
@@ -360,7 +370,7 @@ class AssetsBuddy
             $fileType = 'tmpl';
         }
         if(!in_array($fileType, $this->supportedTypes)) {
-            throw new Exception("Type Unknown {$file} supported file extensions are .js, .css and .tmpl");
+            throw new \Exception("Type Unknown {$file} supported file extensions are .js, .css and .tmpl");
         }
 
         return $fileType;
@@ -490,29 +500,30 @@ class AssetsBuddy
     private function startUp()
     {
         if(!file_exists($this->cacheDirectory)) {
-            mkdir($this->cacheDirectory);
-            mkdir($this->cacheDirectoryjs);
-            mkdir($this->cacheDirectorycss);
-            mkdir($this->cacheDirectorytmpl);
+            mkdir($this->cacheDirectory, 0777, true);
+            mkdir($this->cacheDirectoryjs, 0777, true);
+            mkdir($this->cacheDirectorycss, 0777, true);
+            mkdir($this->cacheDirectorytmpl, 0777, true);
+
         }
 
         if(!file_exists($this->assetDirectory)) {
-            mkdir($this->assetDirectory);
+            mkdir($this->assetDirectory, 0777, true);
         }
 
         if (!file_exists($this->assetDirectory .'js')){
-            mkdir($this->assetDirectory .'js');
-            mkdir($this->assetDirectory .'js/min');
+            mkdir($this->assetDirectory .'js', 0777, true);
+            mkdir($this->assetDirectory .'js/min', 0777, true);
         }
 
         if (!file_exists($this->assetDirectory .'css')){
-            mkdir($this->assetDirectory .'css');
-            mkdir($this->assetDirectory .'css/min');
+            mkdir($this->assetDirectory .'css', 0777, true);
+            mkdir($this->assetDirectory .'css/min', 0777, true);
         }
 
         if (!file_exists($this->assetDirectory .'tmpl')){
-            mkdir($this->assetDirectory .'tmpl');
-            mkdir($this->assetDirectory .'tmpl/min');
+            mkdir($this->assetDirectory .'tmpl', 0777, true);
+            mkdir($this->assetDirectory .'tmpl/min', 0777, true);
         }
 
         if(!file_exists($this->mincache)) {
@@ -566,7 +577,7 @@ class AssetsBuddy
                 $this->createMincache(true);
             }
         } else {
-            throw new Exception("Invalid .mincache file at {$this->mincache}");
+            throw new \Exception("Invalid .mincache file at {$this->mincache}");
         }
     }
 
@@ -578,30 +589,25 @@ class AssetsBuddy
         $this->isDirtytmpl = true;
     }
 
-    private static function getInstance()
+    private static function getInstance($skipConfigCheck = false)
     {
+        if(!$skipConfigCheck) {
+            if(!self::$configSet) {
+                throw new \Exception("Configuration must be set first using AssetsBuddy::configure()");
+            }
+        }
+
         if(self::$Instance){
             return self::$Instance;
         }
-        $Instance = new Assets;
+
+        if($skipConfigCheck) {
+            $Instance = new AssetsBuddy(true);
+        } else {
+            $Instance = new AssetsBuddy;
+        }
         self::$Instance = $Instance;
         return $Instance;
-    }
-
-    function __construct() {
-        $this->cacheDirectory = realpath($_SERVER['DOCUMENT_ROOT'] . '/' . $this->cacheDirectory) . DIRECTORY_SEPARATOR;
-        $this->cacheDirectoryjs = realpath($this->cacheDirectory . '/js/') . DIRECTORY_SEPARATOR;
-        $this->cacheDirectorycss = realpath($this->cacheDirectory .'css') . DIRECTORY_SEPARATOR;
-        $this->cacheDirectorytmpl = realpath($this->cacheDirectory .'tmpl') . DIRECTORY_SEPARATOR;
-        $this->assetDirectory = realpath($_SERVER['DOCUMENT_ROOT'] . '/' . $this->assetDirectory) . DIRECTORY_SEPARATOR;
-        $this->assetDirectoryjs = realpath($this->assetDirectory . '/js/min') . DIRECTORY_SEPARATOR;
-        $this->assetDirectorycss = realpath($this->assetDirectory . '/css/min') . DIRECTORY_SEPARATOR;
-        $this->assetDirectorytmpl = realpath($this->assetDirectory . '/tmpl/min') . DIRECTORY_SEPARATOR;
-        $this->mincache = $this->cacheDirectory . $this->mincache;
-        $this->supportedTypes = array('js', 'css', 'tmpl');
-        if(!$this->skipStartup) {
-            $this->startUp();
-        }
     }
 }
 

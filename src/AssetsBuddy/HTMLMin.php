@@ -11,22 +11,22 @@ namespace AssetsBuddy;
 class HTMLMin
 {
 
-  static protected function domNodeDiscardable(DOMNode $node)
+  static protected function domNodeDiscardable(\DOMNode $node)
   {
     return ($node->tagName == 'meta' && strtolower($node->getAttribute('http-equiv')) == 'content-type');
   }
 
-  static protected function getNextSiblingOfTypeDOMElement(DOMNode $node)
+  static protected function getNextSiblingOfTypeDOMElement(\DOMNode $node)
   {
     do
     {
       $node = $node->nextSibling;
     }
-    while (!($node === null || $node instanceof DOMElement));
+    while (!($node === null || $node instanceof \DOMElement));
     return $node;
   }
 
-  static protected function domAttrDiscardable(DOMAttr $attr)
+  static protected function domAttrDiscardable(\DOMAttr $attr)
   {
     #(!in_array($attr->ownerElement->tagName, array('input', 'select', 'button', 'textarea')) && $attr->name == 'name' && $attr->ownerElement->getAttribute('id') == $attr->value) # elements with pairing name/id’s
     return ($attr->ownerElement->tagName == 'form' && $attr->name == 'method' && strtolower($attr->value) == 'get') # <form method="get"> is default
@@ -39,7 +39,7 @@ class HTMLMin
   private static $void_elements = array('area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr');
   private static $optional_end_tags = array('html', 'head', 'body');
 
-  static protected function domNodeClosingTagOmittable(DOMNode $node)
+  static protected function domNodeClosingTagOmittable(\DOMNode $node)
   {
     # TODO: Exakt die Spezifikation implementieren, indem nachfolgende Elemente
     # mitbetrachtet werden
@@ -61,7 +61,7 @@ class HTMLMin
 
   }
 
-  static protected function domAttrIsBoolean(DOMAttr $attr)
+  static protected function domAttrIsBoolean(\DOMAttr $attr)
   {
     # INKOMPLETT !!
     # gibt anscheinend keine Liste
@@ -77,7 +77,7 @@ class HTMLMin
 
   }
 
-  static protected function domNodeAttributesToString(DOMNode $node)
+  static protected function domNodeAttributesToString(\DOMNode $node)
   {
 
     #Remove quotes around attribute values, when allowed (<p class="foo"> → <p class=foo>)
@@ -107,17 +107,17 @@ class HTMLMin
     return trim($attrstr);
   }
 
-  static protected function domNodeToString(DOMNode $node)
+  static protected function domNodeToString(\DOMNode $node)
   {
     $htmlstr = '';
     foreach ($node->childNodes as $child)
     {
-      if ($child instanceof DOMDocumentType)
+      if ($child instanceof \DOMDocumentType)
       {
         // $htmlstr .= '<!doctype html>';
         /* remove */
       }
-      else if ($child instanceof DOMElement)
+      else if ($child instanceof \DOMElement)
       {
         if (!self::domNodeDiscardable($child))
         {
@@ -130,7 +130,7 @@ class HTMLMin
           }
         }
       }
-      else if ($child instanceof DOMText)
+      else if ($child instanceof \DOMText)
       {
         if ($child->isWhitespaceInElementContent())
         {
@@ -145,7 +145,7 @@ class HTMLMin
           $htmlstr .= strtr($child->wholeText, array('&' => '&amp;', '<' => '&lt;', '>' => '&gt;'));
         }
       }
-      else if ($child instanceof DOMComment)
+      else if ($child instanceof \DOMComment)
       {
         // KOMMENTARE SCHÖN IGNOREN
         // TODO KEEP IE CONDITIONAL COMMENTS
@@ -162,7 +162,7 @@ class HTMLMin
 
   static function mini($html, $consider_inline = 'li')
   {
-    $dom = new DOMDocument();
+    $dom = new \DOMDocument();
     $dom->substituteEntities = false;
     $dom->loadHTML(str_replace('<head>', '<head><Meta http-equiv="content-type" content="text/html; charset=utf-8">', $html));
 
