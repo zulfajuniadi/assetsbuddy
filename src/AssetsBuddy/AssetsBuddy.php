@@ -98,9 +98,9 @@ class AssetsBuddy
     /**
      * $baseDirectory is relative to your working directory. If in doubt, run getcwd() to get your current working
      * directory.
-     * @var string '/'
+     * @var string '/assets/'
      */
-    private $baseUrl = '/';
+    private $baseUrl = '/assets/';
 
     /**
      * $cacheDirectory is relative to your $baseDirectory set above
@@ -117,9 +117,9 @@ class AssetsBuddy
     /**
      * $assetDirectory is relative to your working directory. If in doubt, run getcwd() to get your current working
      * directory.
-     * @var string './'
+     * @var string 'assets/'
      */
-    private $assetDirectory = './';
+    private $assetDirectory = 'assets/';
 
     /**
      * $skipStartup flag. When this is set to true, all directory checking and changed setting checks will be skipped.
