@@ -226,7 +226,7 @@ class AssetsBuddy
             $devMode = 'devMode' . $fileType;
             $namespace = ($namespace) ? $namespace . '.' : '';
             foreach ($T->files[$fileType] as $filePath) {
-                $fileParts = explode(DIRECTORY_SEPARATOR, $filePath);
+                $fileParts = preg_split('/(?<=[\/\\\])(?![\/\\\])/', $filePath);
                 $fileName = array_pop($fileParts);
                 if($T->$merge) {
                     if($T->$isDirty ||
