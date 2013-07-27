@@ -11,6 +11,25 @@ Features
 * Automatically detects changed files and regenerates them.
 * Automatically detects changes to the class configurations and regenerates the files. 
 
-Examples
---------
+Installation / Usage
+--------------------
+
+1. Install composer https://github.com/composer/composer
+2. Create a composer.json inside your application folder:
+
+    ``` json
+    {
+        "require": {
+            "zulfajuniadi/assetsbuddy": "dev-master"
+        }
+    }
+    ```
+3. Run the following code
+
+    ``` sh
+    $ php composer.phar install
+    ```
+
+Examples / Usage
+----------------
 For usage examples, please view index.php inside the test folder.
